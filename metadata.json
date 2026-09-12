@@ -1,0 +1,6 @@
+{
+  "name": "CBT SMPN - LMS Ujian Sekolah",
+  "description": "Aplikasi LMS & CBT Ujian Siswa SMPN Kelas 7, 8, dan 9 dengan multi-role portal Admin, Guru, dan Siswa.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
