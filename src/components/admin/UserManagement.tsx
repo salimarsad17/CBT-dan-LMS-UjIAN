@@ -488,7 +488,7 @@ export const UserManagement: React.FC = () => {
                   type="email"
                   value={formData.email}
                   onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="nama@smpn1teladan.sch.id"
+                  placeholder="nama@smpn2rebangtangkas.sch.id"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
                 />
               </div>

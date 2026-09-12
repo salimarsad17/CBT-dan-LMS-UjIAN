@@ -61,11 +61,11 @@ interface LmsContextType {
 const LmsContext = createContext<LmsContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  USERS: 'smpn_cbt_users_v2',
-  EXAMS: 'smpn_cbt_exams_v2',
-  SUBMISSIONS: 'smpn_cbt_submissions_v2',
-  SCHOOL: 'smpn_cbt_school_v2',
-  ACTIVE_USER: 'smpn_cbt_active_user_v2',
+  USERS: 'smpn_cbt_users_v3',
+  EXAMS: 'smpn_cbt_exams_v3',
+  SUBMISSIONS: 'smpn_cbt_submissions_v3',
+  SCHOOL: 'smpn_cbt_school_v3',
+  ACTIVE_USER: 'smpn_cbt_active_user_v3',
 };
 
 export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -100,7 +100,14 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [schoolConfig, setSchoolConfig] = useState<SchoolConfig>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SCHOOL);
-      return saved ? JSON.parse(saved) : INITIAL_SCHOOL_CONFIG;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.name && (parsed.name.includes('TELADAN') || !parsed.governmentHeader)) {
+          return INITIAL_SCHOOL_CONFIG;
+        }
+        return parsed;
+      }
+      return INITIAL_SCHOOL_CONFIG;
     } catch {
       return INITIAL_SCHOOL_CONFIG;
     }

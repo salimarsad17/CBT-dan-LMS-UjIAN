@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLms } from '../../context/LmsContext';
+import { KopSurat } from '../common/KopSurat';
 import {
   Clock,
   AlertTriangle,
@@ -30,6 +31,7 @@ export const ExamCbtRoom: React.FC = () => {
     submitExam,
     exitExamEarly,
     currentUser,
+    schoolConfig,
   } = useLms();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -244,6 +246,15 @@ export const ExamCbtRoom: React.FC = () => {
         {/* Left / Center Area: Question & Options (8 Cols on Desktop) */}
         <div className="lg:col-span-8 flex flex-col justify-between space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-7 space-y-6">
+            {/* Kop Resmi Soal Ujian: Pemerintah Kab. Way Kanan - Dinas Pendidikan - UPT SMPN 2 Rebang Tangkas */}
+            <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 sm:p-4">
+              <KopSurat
+                compact
+                documentTitle={`NASKAH SOAL ASESMEN: ${currentExam.title.toUpperCase()}`}
+                subTitle={`Mata Pelajaran: ${currentExam.subject} • Jenjang: Kelas ${currentExam.gradeLevel} • TP ${schoolConfig.academicYear} (Semester ${schoolConfig.currentSemester})`}
+              />
+            </div>
+
             {/* Question Header Status */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">

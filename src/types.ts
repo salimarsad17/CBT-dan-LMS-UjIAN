@@ -75,6 +75,8 @@ export interface ExamSubmission {
 }
 
 export interface SchoolConfig {
+  governmentHeader: string;
+  departmentHeader: string;
   name: string;
   npsn: string;
   address: string;

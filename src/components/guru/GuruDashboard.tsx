@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export const GuruDashboard: React.FC = () => {
-  const { currentUser, exams, submissions, deleteExam, togglePublishExam } = useLms();
+  const { currentUser, exams, submissions, deleteExam, togglePublishExam, schoolConfig } = useLms();
 
   const [activeTab, setActiveTab] = useState<'exams' | 'grading'>('exams');
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
@@ -86,7 +86,7 @@ export const GuruDashboard: React.FC = () => {
               {currentUser.name}
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1">
-              NIP: <span className="font-mono text-white">{currentUser.identifier}</span> • SMP Negeri 1 Teladan Nusantara
+              NIP: <span className="font-mono text-white">{currentUser.identifier}</span> • {schoolConfig.name}
             </p>
           </div>
         </div>

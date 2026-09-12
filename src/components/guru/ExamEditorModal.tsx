@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLms } from '../../context/LmsContext';
+import { KopSurat } from '../common/KopSurat';
 import { Exam, GradeLevel, Question, QuestionOption } from '../../types';
 import {
   Plus,
@@ -360,6 +361,15 @@ export const ExamEditorModal: React.FC<ExamEditorModalProps> = ({ examToEdit, on
 
           {/* Section 3: Questions List Builder */}
           <div className="space-y-4 pt-4 border-t border-slate-200">
+            {/* Kop Soal Resmi UPT SMPN 2 Rebang Tangkas */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:p-4">
+              <KopSurat
+                compact
+                documentTitle={`FORMAT KOP RESMI SOAL UJIAN - TINGKAT KELAS ${gradeLevel}`}
+                subTitle={`Mata Pelajaran: ${subject || 'Semua Mapel'} • Format Resmi UPT SMPN 2 Rebang Tangkas`}
+              />
+            </div>
+
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 2. Daftar Butir Soal Pilihan Ganda ({questions.length} Butir)

@@ -6,6 +6,8 @@ export const SchoolSettings: React.FC = () => {
   const { schoolConfig, updateSchoolConfig, resetAllData } = useLms();
 
   const [formData, setFormData] = useState({
+    governmentHeader: schoolConfig.governmentHeader || 'PEMERINTAH KABUPATEN WAY KANAN',
+    departmentHeader: schoolConfig.departmentHeader || 'DINAS PENDIDIKAN',
     name: schoolConfig.name,
     npsn: schoolConfig.npsn,
     address: schoolConfig.address,
@@ -48,9 +50,39 @@ export const SchoolSettings: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Kop Tingkat 1: Instansi Pemerintah
+              </label>
+              <input
+                type="text"
+                value={formData.governmentHeader}
+                onChange={e => setFormData(prev => ({ ...prev, governmentHeader: e.target.value }))}
+                className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-xs font-bold uppercase"
+                placeholder="PEMERINTAH KABUPATEN WAY KANAN"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Kop Tingkat 2: Dinas Pengampu
+              </label>
+              <input
+                type="text"
+                value={formData.departmentHeader}
+                onChange={e => setFormData(prev => ({ ...prev, departmentHeader: e.target.value }))}
+                className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-xs font-bold uppercase"
+                placeholder="DINAS PENDIDIKAN"
+                required
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block font-bold text-slate-700 mb-1">
-              Nama Resmi SMP Negeri
+              Kop Tingkat 3: Nama Resmi Sekolah (UPT SMPN)
             </label>
             <input
               type="text"

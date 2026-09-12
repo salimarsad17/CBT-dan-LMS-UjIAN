@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLms } from '../../context/LmsContext';
+import { KopSurat } from '../common/KopSurat';
 import {
   Award,
   CheckCircle2,
@@ -65,25 +66,11 @@ export const ExamResultView: React.FC = () => {
 
       {/* Official School Header for Result Document */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
-        {/* Kop Surat Sekolah */}
-        <div className="border-b-2 border-slate-900 pb-4 text-center relative">
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-700 text-white flex items-center justify-center font-bold text-lg shrink-0">
-              <School className="w-7 h-7" />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-black uppercase text-slate-900 tracking-wider">
-                {schoolConfig.name}
-              </h2>
-              <p className="text-xs text-slate-600">
-                NPSN: {schoolConfig.npsn} • {schoolConfig.address}
-              </p>
-              <p className="text-[11px] font-bold text-blue-800 uppercase tracking-wide mt-0.5">
-                LEMBAR HASIL ASESMEN UJIAN BERBASIS KOMPUTER (CBT) • SEMESTER {schoolConfig.currentSemester.toUpperCase()} TP {schoolConfig.academicYear}
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Kop Surat Resmi: Pemerintah Kabupaten Way Kanan - Dinas Pendidikan - UPT SMPN 2 Rebang Tangkas */}
+        <KopSurat
+          documentTitle="LEMBAR HASIL ASESMEN UJIAN BERBASIS KOMPUTER (CBT)"
+          subTitle={`SEMESTER ${schoolConfig.currentSemester.toUpperCase()} • TAHUN PELAJARAN ${schoolConfig.academicYear}`}
+        />
 
         {/* Student & Exam Details Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-xs border border-slate-200">
@@ -328,13 +315,13 @@ export const ExamResultView: React.FC = () => {
         <div className="hidden print:grid grid-cols-2 pt-12 text-center text-xs">
           <div>
             <p>Mengetahui,</p>
-            <p>Kepala SMP Negeri 1 Teladan Nusantara</p>
+            <p>Kepala {schoolConfig.name}</p>
             <div className="h-16" />
             <p className="font-bold underline">{schoolConfig.principal}</p>
             <p className="text-slate-500">NIP: 196805121994031005</p>
           </div>
           <div>
-            <p>Jakarta, {new Date(sub.submittedAt).toLocaleDateString('id-ID', { dateStyle: 'long' })}</p>
+            <p>Way Kanan, {new Date(sub.submittedAt).toLocaleDateString('id-ID', { dateStyle: 'long' })}</p>
             <p>Guru Pengampu Mata Pelajaran</p>
             <div className="h-16" />
             <p className="font-bold underline">{exam?.teacherName || 'Guru Mata Pelajaran'}</p>

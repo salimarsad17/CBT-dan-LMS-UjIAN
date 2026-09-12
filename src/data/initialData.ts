@@ -1,9 +1,11 @@
 import { User, Exam, ExamSubmission, SchoolConfig } from '../types';
 
 export const INITIAL_SCHOOL_CONFIG: SchoolConfig = {
-  name: 'SMP NEGERI 1 TELADAN NUSANTARA',
-  npsn: '20108921',
-  address: 'Jl. Pendidikan No. 45, Kecamatan Gambir, Jakarta Pusat',
+  governmentHeader: 'PEMERINTAH KABUPATEN WAY KANAN',
+  departmentHeader: 'DINAS PENDIDIKAN',
+  name: 'UPT SMPN 2 REBANG TANGKAS',
+  npsn: '10806873',
+  address: 'Jl. Raya Rebang Tangkas, Kecamatan Rebang Tangkas, Kabupaten Way Kanan, Lampung 34766',
   principal: 'Drs. H. Mulyadi, M.Pd.',
   academicYear: '2024/2025',
   currentSemester: 'Ganjil',
@@ -17,7 +19,7 @@ export const INITIAL_USERS: User[] = [
     name: 'H. Suryanto, M.Kom.',
     role: 'admin',
     identifier: '197803122005011002', // NIP
-    email: 'admin.cbt@smpn1teladan.sch.id',
+    email: 'admin.cbt@smpn2rebangtangkas.sch.id',
     phone: '0812-3456-7890',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
   },
@@ -29,7 +31,7 @@ export const INITIAL_USERS: User[] = [
     role: 'guru',
     identifier: '198205142008012015', // NIP
     subject: 'Ilmu Pengetahuan Alam (IPA)',
-    email: 'sri.wahyuni@smpn1teladan.sch.id',
+    email: 'sri.wahyuni@smpn2rebangtangkas.sch.id',
     phone: '0813-9876-5432',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
   },
@@ -40,7 +42,7 @@ export const INITIAL_USERS: User[] = [
     role: 'guru',
     identifier: '198509202010011008', // NIP
     subject: 'Matematika',
-    email: 'bambang.hermawan@smpn1teladan.sch.id',
+    email: 'bambang.hermawan@smpn2rebangtangkas.sch.id',
     phone: '0815-1122-3344',
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80',
   },
@@ -51,7 +53,7 @@ export const INITIAL_USERS: User[] = [
     role: 'guru',
     identifier: '198902182015022003', // NIP
     subject: 'Bahasa Indonesia',
-    email: 'ratna.dewi@smpn1teladan.sch.id',
+    email: 'ratna.dewi@smpn2rebangtangkas.sch.id',
     phone: '0819-5566-7788',
     avatar: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=150&auto=format&fit=crop&q=80',
   },
@@ -64,7 +66,7 @@ export const INITIAL_USERS: User[] = [
     identifier: '0081234567', // NISN
     gradeLevel: '7',
     className: '7A',
-    email: 'ahmad.rifai@siswa.smpn1teladan.sch.id',
+    email: 'ahmad.rifai@siswa.smpn2rebangtangkas.sch.id',
     avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
   },
   {
@@ -75,7 +77,7 @@ export const INITIAL_USERS: User[] = [
     identifier: '0089876543', // NISN
     gradeLevel: '7',
     className: '7B',
-    email: 'dewi.sartika@siswa.smpn1teladan.sch.id',
+    email: 'dewi.sartika@siswa.smpn2rebangtangkas.sch.id',
     avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
   },
   // SISWA KELAS 8
@@ -87,7 +89,7 @@ export const INITIAL_USERS: User[] = [
     identifier: '0072345678', // NISN
     gradeLevel: '8',
     className: '8B',
-    email: 'siti.nurhaliza@siswa.smpn1teladan.sch.id',
+    email: 'siti.nurhaliza@siswa.smpn2rebangtangkas.sch.id',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
   },
   {
@@ -98,7 +100,7 @@ export const INITIAL_USERS: User[] = [
     identifier: '0078877665', // NISN
     gradeLevel: '8',
     className: '8A',
-    email: 'fadhil@siswa.smpn1teladan.sch.id',
+    email: 'fadhil@siswa.smpn2rebangtangkas.sch.id',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
   },
   // SISWA KELAS 9
@@ -110,7 +112,7 @@ export const INITIAL_USERS: User[] = [
     identifier: '0063456789', // NISN
     gradeLevel: '9',
     className: '9A',
-    email: 'budi.santoso@siswa.smpn1teladan.sch.id',
+    email: 'budi.santoso@siswa.smpn2rebangtangkas.sch.id',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
   },
   {
@@ -121,7 +123,7 @@ export const INITIAL_USERS: User[] = [
     identifier: '0069876543', // NISN
     gradeLevel: '9',
     className: '9C',
-    email: 'cantika.putri@siswa.smpn1teladan.sch.id',
+    email: 'cantika.putri@siswa.smpn2rebangtangkas.sch.id',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
   },
 ];
