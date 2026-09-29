@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Exam, ExamSubmission, SchoolConfig, UserRole, GradeLevel } from '../types';
+import { User, Exam, ExamSubmission, SchoolConfig, UserRole, GradeLevel, PaiModule, ChatMessage } from '../types';
 import {
   INITIAL_USERS,
   INITIAL_EXAMS,
   INITIAL_SUBMISSIONS,
   INITIAL_SCHOOL_CONFIG,
+  INITIAL_PAI_MODULES,
+  INITIAL_CHAT_MESSAGES,
 } from '../data/initialData';
+
+export type MainNavTab = 'beranda' | 'materi' | 'ujian' | 'nilai' | 'pesan';
 
 interface LmsContextType {
   currentUser: User | null;
@@ -13,11 +17,17 @@ interface LmsContextType {
   exams: Exam[];
   submissions: ExamSubmission[];
   schoolConfig: SchoolConfig;
+  modules: PaiModule[];
+  chatMessages: ChatMessage[];
   
   // Navigation & UI state
   activeRole: UserRole | null;
   activeView: string;
   setActiveView: (view: string) => void;
+  activeTab: MainNavTab;
+  setActiveTab: (tab: MainNavTab) => void;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (open: boolean) => void;
   
   // CBT Engine State
   currentExam: Exam | null;
@@ -31,7 +41,7 @@ interface LmsContextType {
   login: (identifier: string, role?: UserRole) => { success: boolean; message?: string };
   loginAsUser: (user: User) => void;
   logout: () => void;
-  quickSwitchUser: (role: UserRole, grade?: GradeLevel) => void;
+  quickSwitchUser: (role: 'guru' | 'siswa', grade?: GradeLevel) => void;
   
   // Exam student actions
   startExamWithToken: (examId: string, token: string) => { success: boolean; message?: string };
@@ -42,11 +52,19 @@ interface LmsContextType {
   exitExamEarly: () => void;
   viewSubmissionDetails: (submission: ExamSubmission) => void;
   
-  // Guru / Admin exam actions
+  // Guru exam actions
   addExam: (exam: Omit<Exam, 'id' | 'createdAt'>) => Exam;
   updateExam: (exam: Exam) => void;
   deleteExam: (examId: string) => void;
   togglePublishExam: (examId: string) => void;
+  
+  // PAI Module Actions
+  addModule: (module: Omit<PaiModule, 'id'>) => void;
+  deleteModule: (moduleId: string) => void;
+  
+  // Chat Actions
+  sendMessage: (recipientId: string, recipientName: string, message: string) => void;
+  markMessageAsRead: (messageId: string) => void;
   
   // User Management
   addUser: (user: Omit<User, 'id'>) => void;
@@ -61,11 +79,13 @@ interface LmsContextType {
 const LmsContext = createContext<LmsContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  USERS: 'smpn_cbt_users_v3',
-  EXAMS: 'smpn_cbt_exams_v3',
-  SUBMISSIONS: 'smpn_cbt_submissions_v3',
-  SCHOOL: 'smpn_cbt_school_v3',
-  ACTIVE_USER: 'smpn_cbt_active_user_v3',
+  USERS: 'media_pai_users_v4',
+  EXAMS: 'media_pai_exams_v4',
+  SUBMISSIONS: 'media_pai_submissions_v4',
+  SCHOOL: 'media_pai_school_v4',
+  MODULES: 'media_pai_modules_v4',
+  MESSAGES: 'media_pai_messages_v4',
+  ACTIVE_USER: 'media_pai_active_user_v4',
 };
 
 export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -100,34 +120,47 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [schoolConfig, setSchoolConfig] = useState<SchoolConfig>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SCHOOL);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.name && (parsed.name.includes('TELADAN') || !parsed.governmentHeader)) {
-          return INITIAL_SCHOOL_CONFIG;
-        }
-        return parsed;
-      }
-      return INITIAL_SCHOOL_CONFIG;
+      return saved ? JSON.parse(saved) : INITIAL_SCHOOL_CONFIG;
     } catch {
       return INITIAL_SCHOOL_CONFIG;
     }
   });
 
-  // Current logged in user (Default to Siswa Kelas 7 for instant preview, or saved)
+  const [modules, setModules] = useState<PaiModule[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.MODULES);
+      return saved ? JSON.parse(saved) : INITIAL_PAI_MODULES;
+    } catch {
+      return INITIAL_PAI_MODULES;
+    }
+  });
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.MESSAGES);
+      return saved ? JSON.parse(saved) : INITIAL_CHAT_MESSAGES;
+    } catch {
+      return INITIAL_CHAT_MESSAGES;
+    }
+  });
+
+  // Current logged in user (Default to Siswa Kelas 7 or saved)
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ACTIVE_USER);
       if (saved) return JSON.parse(saved);
       // Default to student 7A for immediate friendly experience
-      return INITIAL_USERS.find(u => u.username === 'siswa7') || INITIAL_USERS[4];
+      return INITIAL_USERS.find(u => u.username === 'siswa7') || INITIAL_USERS[2];
     } catch {
-      return INITIAL_USERS[4];
+      return INITIAL_USERS[2];
     }
   });
 
   const [activeView, setActiveView] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<MainNavTab>('beranda');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
-  // Exam CBT Session State
+  // CBT Exam Session State
   const [currentExam, setCurrentExam] = useState<Exam | null>(null);
   const [examAnswers, setExamAnswers] = useState<Record<string, string>>({});
   const [examDoubtful, setExamDoubtful] = useState<Record<string, boolean>>({});
@@ -162,6 +195,22 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     try {
+      localStorage.setItem(STORAGE_KEYS.MODULES, JSON.stringify(modules));
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
+  }, [modules]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(chatMessages));
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
+  }, [chatMessages]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem(STORAGE_KEYS.SCHOOL, JSON.stringify(schoolConfig));
     } catch (e) {
       console.warn('LocalStorage error:', e);
@@ -180,7 +229,7 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [currentUser]);
 
-  // Login handler
+  // Login handler - ONLY guru and siswa
   const login = (identifier: string, role?: UserRole): { success: boolean; message?: string } => {
     const cleanId = identifier.trim().toLowerCase();
     const foundUser = users.find(u => {
@@ -195,19 +244,21 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (foundUser) {
       setCurrentUser(foundUser);
       setActiveView('dashboard');
+      setActiveTab('beranda');
       setCurrentExam(null);
       return { success: true };
     }
 
     return {
       success: false,
-      message: 'NISN / NIP / Username tidak ditemukan. Silakan cek kembali atau gunakan tombol Demo Login.',
+      message: 'NISN / NIP / Username tidak ditemukan. Silakan cek kembali atau gunakan tombol Login Cepat Demo.',
     };
   };
 
   const loginAsUser = (user: User) => {
     setCurrentUser(user);
     setActiveView('dashboard');
+    setActiveTab('beranda');
     setCurrentExam(null);
   };
 
@@ -217,11 +268,10 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveView('login');
   };
 
-  const quickSwitchUser = (role: UserRole, grade?: GradeLevel) => {
+  // Quick switch for test evaluation - ONLY Guru and Siswa
+  const quickSwitchUser = (role: 'guru' | 'siswa', grade?: GradeLevel) => {
     let targetUser: User | undefined;
-    if (role === 'admin') {
-      targetUser = users.find(u => u.role === 'admin');
-    } else if (role === 'guru') {
+    if (role === 'guru') {
       targetUser = users.find(u => u.role === 'guru');
     } else if (role === 'siswa') {
       if (grade) {
@@ -251,26 +301,17 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (exam.token.trim().toUpperCase() !== token.trim().toUpperCase()) {
-      return {
-        success: false,
-        message: `Token ujian tidak valid! Token yang benar adalah "${exam.token}".`,
-      };
+      return { success: false, message: 'Token ujian salah! Silakan tanyakan kepada Guru PAI pengawas ujian.' };
     }
 
-    // Check if student already submitted this exam
+    // Check if student already submitted
     if (currentUser) {
-      const alreadySubmitted = submissions.some(
-        s => s.examId === exam.id && s.studentId === currentUser.id
-      );
-      if (alreadySubmitted) {
-        return {
-          success: false,
-          message: 'Anda sudah pernah menyelesaikan dan mengirimkan hasil ujian ini.',
-        };
+      const alreadyDone = submissions.some(s => s.examId === examId && s.studentId === currentUser.id);
+      if (alreadyDone) {
+        return { success: false, message: 'Anda sudah menyelesaikan ujian ini sebelumnya.' };
       }
     }
 
-    // Initialize CBT session
     setCurrentExam(exam);
     setExamAnswers({});
     setExamDoubtful({});
@@ -282,17 +323,11 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const answerQuestion = (questionId: string, answer: string) => {
-    setExamAnswers(prev => ({
-      ...prev,
-      [questionId]: answer,
-    }));
+    setExamAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
   const toggleDoubtful = (questionId: string) => {
-    setExamDoubtful(prev => ({
-      ...prev,
-      [questionId]: !prev[questionId],
-    }));
+    setExamDoubtful(prev => ({ ...prev, [questionId]: !prev[questionId] }));
   };
 
   const registerExamViolation = () => {
@@ -302,28 +337,20 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const submitExam = (): ExamSubmission | null => {
     if (!currentExam || !currentUser) return null;
 
-    let totalScore = 0;
     let correctCount = 0;
-    let wrongCount = 0;
+    const totalQuestions = currentExam.questions.length;
 
     currentExam.questions.forEach(q => {
-      const studentAnswer = examAnswers[q.id];
-      if (studentAnswer === q.correctAnswer) {
-        totalScore += q.score;
-        correctCount += 1;
-      } else {
-        wrongCount += 1;
+      if (examAnswers[q.id] === q.correctAnswer) {
+        correctCount++;
       }
     });
 
-    const maxScore = currentExam.questions.reduce((acc, q) => acc + q.score, 0);
-    // Normalize to 0-100 scale if needed
-    const finalScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-    const isPassed = finalScore >= currentExam.passingGrade;
+    const calculatedScore = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+    const isPassed = calculatedScore >= currentExam.passingGrade;
+    const timeSpentSeconds = examStartedAt ? Math.round((Date.now() - examStartedAt) / 1000) : 0;
 
-    const timeSpent = examStartedAt ? Math.round((Date.now() - examStartedAt) / 1000) : 0;
-
-    const submission: ExamSubmission = {
+    const newSubmission: ExamSubmission = {
       id: `sub-${Date.now()}`,
       examId: currentExam.id,
       examTitle: currentExam.title,
@@ -332,31 +359,32 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       studentId: currentUser.id,
       studentName: currentUser.name,
       studentNisn: currentUser.identifier,
-      studentClass: currentUser.className || `${currentExam.gradeLevel}A`,
+      studentClass: currentUser.className || `${currentUser.gradeLevel || '7'}A`,
       answers: { ...examAnswers },
       doubtfulStatus: { ...examDoubtful },
-      totalQuestions: currentExam.questions.length,
+      totalQuestions,
       correctAnswersCount: correctCount,
-      wrongAnswersCount: wrongCount,
-      score: finalScore,
+      wrongAnswersCount: totalQuestions - correctCount,
+      score: calculatedScore,
       isPassed,
       startedAt: examStartedAt ? new Date(examStartedAt).toISOString() : new Date().toISOString(),
       submittedAt: new Date().toISOString(),
       violationCount: examViolations,
-      timeSpentSeconds: timeSpent,
+      timeSpentSeconds,
     };
 
-    setSubmissions(prev => [submission, ...prev]);
-    setLastCompletedSubmission(submission);
+    setSubmissions(prev => [newSubmission, ...prev.filter(s => !(s.examId === currentExam.id && s.studentId === currentUser.id))]);
+    setLastCompletedSubmission(newSubmission);
     setCurrentExam(null);
     setActiveView('exam-result');
 
-    return submission;
+    return newSubmission;
   };
 
   const exitExamEarly = () => {
     setCurrentExam(null);
     setActiveView('dashboard');
+    setActiveTab('ujian');
   };
 
   const viewSubmissionDetails = (submission: ExamSubmission) => {
@@ -364,29 +392,67 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveView('exam-result');
   };
 
-  // Exam CRUD
+  // Guru exam management actions
   const addExam = (examData: Omit<Exam, 'id' | 'createdAt'>): Exam => {
     const newExam: Exam = {
       ...examData,
-      id: `exam-${Date.now()}`,
+      id: `exam-pai-${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
     setExams(prev => [newExam, ...prev]);
     return newExam;
   };
 
-  const updateExam = (updated: Exam) => {
-    setExams(prev => prev.map(e => (e.id === updated.id ? updated : e)));
+  const updateExam = (updatedExam: Exam) => {
+    setExams(prev => prev.map(e => (e.id === updatedExam.id ? updatedExam : e)));
   };
 
   const deleteExam = (examId: string) => {
     setExams(prev => prev.filter(e => e.id !== examId));
+    setSubmissions(prev => prev.filter(s => s.examId !== examId));
   };
 
   const togglePublishExam = (examId: string) => {
     setExams(prev =>
       prev.map(e => (e.id === examId ? { ...e, isPublished: !e.isPublished } : e))
     );
+  };
+
+  // PAI Module Actions
+  const addModule = (modData: Omit<PaiModule, 'id'>) => {
+    const newMod: PaiModule = {
+      ...modData,
+      id: `modul-pai-${Date.now()}`,
+    };
+    setModules(prev => [newMod, ...prev]);
+  };
+
+  const deleteModule = (moduleId: string) => {
+    setModules(prev => prev.filter(m => m.id !== moduleId));
+  };
+
+  // Chat Actions
+  const sendMessage = (recipientId: string, recipientName: string, message: string) => {
+    if (!currentUser || !message.trim()) return;
+
+    const newMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderRole: currentUser.role,
+      senderAvatar: currentUser.avatar,
+      recipientId,
+      recipientName,
+      message: message.trim(),
+      timestamp: new Date().toISOString(),
+      isRead: false,
+    };
+
+    setChatMessages(prev => [...prev, newMsg]);
+  };
+
+  const markMessageAsRead = (messageId: string) => {
+    setChatMessages(prev => prev.map(m => m.id === messageId ? { ...m, isRead: true } : m));
   };
 
   // User Management
@@ -398,10 +464,10 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUsers(prev => [...prev, newUser]);
   };
 
-  const updateUser = (updated: User) => {
-    setUsers(prev => prev.map(u => (u.id === updated.id ? updated : u)));
-    if (currentUser?.id === updated.id) {
-      setCurrentUser(updated);
+  const updateUser = (updatedUser: User) => {
+    setUsers(prev => prev.map(u => (u.id === updatedUser.id ? updatedUser : u)));
+    if (currentUser?.id === updatedUser.id) {
+      setCurrentUser(updatedUser);
     }
   };
 
@@ -418,15 +484,20 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem(STORAGE_KEYS.EXAMS);
     localStorage.removeItem(STORAGE_KEYS.SUBMISSIONS);
     localStorage.removeItem(STORAGE_KEYS.SCHOOL);
+    localStorage.removeItem(STORAGE_KEYS.MODULES);
+    localStorage.removeItem(STORAGE_KEYS.MESSAGES);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER);
 
     setUsers(INITIAL_USERS);
     setExams(INITIAL_EXAMS);
     setSubmissions(INITIAL_SUBMISSIONS);
     setSchoolConfig(INITIAL_SCHOOL_CONFIG);
-    setCurrentUser(INITIAL_USERS[4]); // Siswa 7A
-    setCurrentExam(null);
+    setModules(INITIAL_PAI_MODULES);
+    setChatMessages(INITIAL_CHAT_MESSAGES);
+    setCurrentUser(INITIAL_USERS[2]); // Ahmad Rifai (Siswa 7)
     setActiveView('dashboard');
+    setActiveTab('beranda');
+    setCurrentExam(null);
   };
 
   return (
@@ -437,9 +508,15 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         exams,
         submissions,
         schoolConfig,
+        modules,
+        chatMessages,
         activeRole: currentUser?.role || null,
         activeView,
         setActiveView,
+        activeTab,
+        setActiveTab,
+        isSidebarOpen,
+        setIsSidebarOpen,
         currentExam,
         examAnswers,
         examDoubtful,
@@ -461,6 +538,10 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateExam,
         deleteExam,
         togglePublishExam,
+        addModule,
+        deleteModule,
+        sendMessage,
+        markMessageAsRead,
         addUser,
         updateUser,
         deleteUser,
@@ -476,7 +557,7 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 export const useLms = (): LmsContextType => {
   const context = useContext(LmsContext);
   if (!context) {
-    throw new Error('useLms must be used within a LmsProvider');
+    throw new Error('useLms must be used within an LmsProvider');
   }
   return context;
 };

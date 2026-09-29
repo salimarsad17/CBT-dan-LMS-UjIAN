@@ -84,3 +84,35 @@ export interface SchoolConfig {
   academicYear: string;
   currentSemester: 'Ganjil' | 'Genap';
 }
+
+export interface PaiModule {
+  id: string;
+  title: string;
+  arabicTitle?: string;
+  category: 'quran_hadis' | 'akidah' | 'akhlak' | 'fikih' | 'tarikh';
+  gradeLevel: GradeLevel;
+  semester: 'Ganjil' | 'Genap';
+  description: string;
+  content: string;
+  versesOrHadits?: {
+    arabic: string;
+    transliteration?: string;
+    translation: string;
+    source: string;
+  }[];
+  keyPoints: string[];
+  audioUrl?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: UserRole;
+  senderAvatar?: string;
+  recipientId: string; // or 'all' or class e.g. '7A'
+  recipientName: string;
+  message: string;
+  timestamp: string;
+  isRead: boolean;
+}

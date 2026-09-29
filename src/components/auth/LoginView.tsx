@@ -1,26 +1,55 @@
 import React, { useState } from 'react';
 import { useLms } from '../../context/LmsContext';
-import { UserRole } from '../../types';
 import {
   GraduationCap,
   BookOpen,
-  ShieldCheck,
-  School,
   Lock,
   User,
   ArrowRight,
   AlertCircle,
   Sparkles,
   CheckCircle2,
+  Image as ImageIcon,
+  Sun,
+  Camera,
+  Layers,
+  BookMarked,
+  FileCheck,
 } from 'lucide-react';
+
+const SCHOOL_WALLPAPERS = [
+  {
+    id: 'gedung-utama',
+    title: 'Gedung Utama Terang',
+    subtitle: 'Arsitektur modern, bersih & langit biru cerah',
+    url: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2000&q=85',
+  },
+  {
+    id: 'halaman-asri',
+    title: 'Halaman Sekolah Asri',
+    subtitle: 'Taman hijau rindang & gedung sekolah megah',
+    url: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=2000&q=85',
+  },
+  {
+    id: 'kampus-modern',
+    title: 'Paviliun Belajar Modern',
+    subtitle: 'Suasana lingkungan sekolah terang dan nyaman',
+    url: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=2000&q=85',
+  },
+];
 
 export const LoginView: React.FC = () => {
   const { login, loginAsUser, users, schoolConfig } = useLms();
 
-  const [selectedRole, setSelectedRole] = useState<UserRole>('siswa');
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  // ONLY Guru and Siswa - No Admin
+  const [selectedRole, setSelectedRole] = useState<'siswa' | 'guru'>('siswa');
+  const [identifier, setIdentifier] = useState('siswa7');
+  const [password, setPassword] = useState('123456');
   const [errorMessage, setErrorMessage] = useState('');
+  const [activeWallpaperIndex, setActiveWallpaperIndex] = useState(0);
+  const [isUltraBright, setIsUltraBright] = useState(false);
+
+  const currentWallpaper = SCHOOL_WALLPAPERS[activeWallpaperIndex];
 
   const handleManualLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +59,7 @@ export const LoginView: React.FC = () => {
       setErrorMessage(
         selectedRole === 'siswa'
           ? 'Mohon masukkan NISN atau username siswa.'
-          : 'Mohon masukkan NIP atau username.'
+          : 'Mohon masukkan NIP atau username guru.'
       );
       return;
     }
@@ -41,105 +70,165 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  // Demo accounts for quick testing
-  const adminUser = users.find(u => u.role === 'admin');
-  const guruIpa = users.find(u => u.role === 'guru' && u.subject?.includes('IPA'));
-  const guruMtk = users.find(u => u.role === 'guru' && u.subject?.includes('Matematika'));
+  // Demo accounts for quick testing: GURU PAI & SISWA ONLY
+  const guruPai = users.find(u => u.role === 'guru' && u.username === 'guru_pai') || users.find(u => u.role === 'guru');
   const siswaKls7 = users.find(u => u.role === 'siswa' && u.gradeLevel === '7');
   const siswaKls8 = users.find(u => u.role === 'siswa' && u.gradeLevel === '8');
   const siswaKls9 = users.find(u => u.role === 'siswa' && u.gradeLevel === '9');
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-slate-50 py-10 px-4 sm:px-6 flex flex-col justify-center items-center">
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+    <div className="relative min-h-[calc(100vh-64px)] py-8 px-4 sm:px-6 flex flex-col justify-center items-center overflow-hidden">
+      {/* Background Image: Bright, Crisp & Clear School Campus Building */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <img
+          src={currentWallpaper.url}
+          alt={currentWallpaper.title}
+          className={`w-full h-full object-cover object-center transition-all duration-700 ease-out transform scale-100 ${
+            isUltraBright
+              ? 'brightness-110 contrast-105 saturate-110'
+              : 'brightness-100 contrast-100'
+          }`}
+          referrerPolicy="no-referrer"
+        />
+        {/* Crisp Translucent Overlay */}
+        <div
+          className={`absolute inset-0 transition-colors duration-500 ${
+            isUltraBright
+              ? 'bg-slate-900/25 backdrop-blur-[0.5px]'
+              : 'bg-gradient-to-tr from-slate-950/45 via-slate-900/30 to-emerald-950/35 backdrop-blur-[1px]'
+          }`}
+        />
+      </div>
+
+      {/* Top Floating Badge & Wallpaper Switcher Bar */}
+      <div className="relative z-10 w-full max-w-5xl mb-4 flex flex-wrap items-center justify-between gap-2.5 bg-slate-900/80 backdrop-blur-md text-white py-2 px-3.5 rounded-xl border border-white/20 shadow-lg text-xs">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-emerald-500/30 text-emerald-300 flex items-center justify-center">
+            <Camera className="w-3.5 h-3.5" />
+          </div>
+          <span className="font-semibold text-slate-200 hidden sm:inline">
+            Foto Gedung Kampus Sekolah:
+          </span>
+          <span className="font-bold text-emerald-300">
+            {schoolConfig.name} ({currentWallpaper.title})
+          </span>
+        </div>
+
+        {/* Wallpaper selector buttons & brightness booster */}
+        <div className="flex items-center gap-1.5 ml-auto">
+          {SCHOOL_WALLPAPERS.map((wp, idx) => (
+            <button
+              key={wp.id}
+              type="button"
+              id={`wallpaper-select-${wp.id}`}
+              onClick={() => setActiveWallpaperIndex(idx)}
+              className={`px-2.5 py-1 rounded-lg font-medium transition text-[11px] flex items-center gap-1 ${
+                activeWallpaperIndex === idx
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-white/40'
+                  : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
+              }`}
+              title={wp.subtitle}
+            >
+              <ImageIcon className="w-3 h-3" />
+              <span>Gedung {idx + 1}</span>
+            </button>
+          ))}
+
+          <button
+            type="button"
+            id="toggle-bright-mode-btn"
+            onClick={() => setIsUltraBright(!isUltraBright)}
+            className={`px-2.5 py-1 rounded-lg font-medium transition text-[11px] flex items-center gap-1 ml-1 ${
+              isUltraBright
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
+            }`}
+            title="Tingkatkan kecerahan background sekolah"
+          >
+            <Sun className="w-3 h-3" />
+            <span>{isUltraBright ? 'Mode Terang Aktif' : 'Paling Terang'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
         {/* Left Column: School Information & Portal Description */}
-        <div className="lg:col-span-6 space-y-6 text-slate-800">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/80 text-blue-800 text-xs font-semibold border border-blue-200">
-            <School className="w-4 h-4 text-blue-700" />
-            <span>PORTAL ASESMEN & UJIAN TERPADU</span>
+        <div className="lg:col-span-6 bg-white/95 backdrop-blur-md rounded-2xl border border-white/80 shadow-xl p-6 sm:p-7 space-y-5 text-slate-800">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100/90 text-emerald-900 text-xs font-bold border border-emerald-200">
+            <BookMarked className="w-4 h-4 text-emerald-700" />
+            <span>MEDIA PEMBELAJARAN PAI & CBT</span>
           </div>
 
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-              LMS Ujian Digital <br />
-              <span className="text-blue-700">{schoolConfig.name}</span>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none">
+              MEDIA PAI
             </h1>
-            <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
-              Sistem Ujian Berbasis Komputer (CBT) & Penilaian Sumatif resmi untuk siswa{' '}
-              <strong className="text-slate-900 font-semibold">Kelas 7, Kelas 8, dan Kelas 9</strong>.
-              Mendukung pengawasan anti-cheat otomatis, rekapitulasi nilai instan, dan bank soal terpadu.
+            <p className="text-sm font-semibold text-emerald-700 mt-1">
+              Pendidikan Agama Islam & Budi Pekerti • {schoolConfig.name}
+            </p>
+            <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Sistem pembelajaran digital interaktif, bank materi PAI (Al-Qur'an, Hadits, Fiqih, Akidah Akhlak, SKI),
+              serta Asesmen Sumatif CBT berbasis komputer untuk siswa <strong className="text-slate-900 font-semibold">Kelas 7, Kelas 8, dan Kelas 9</strong>.
             </p>
           </div>
 
           {/* Key Features List */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 className="w-4 h-4" />
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
               </div>
-              <p className="text-xs sm:text-sm text-slate-700">
-                <strong className="font-semibold text-slate-900">3 Level Hak Akses:</strong> Siswa,
-                Guru Pembuat Soal, dan Administrator Kurikulum Sekolah.
+              <p className="text-xs text-slate-700 leading-snug">
+                <strong className="font-semibold text-slate-900">Portal Guru & Siswa:</strong> Akses materi interaktif, latihan soal, dan konsultasi tanya jawab langsung.
               </p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 className="w-4 h-4" />
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
               </div>
-              <p className="text-xs sm:text-sm text-slate-700">
-                <strong className="font-semibold text-slate-900">CBT Engine Terstandar:</strong> Dilengkapi
-                countdown timer, navigasi ragu-ragu/tuntas, dan deteksi berpindah tab jendela.
+              <p className="text-xs text-slate-700 leading-snug">
+                <strong className="font-semibold text-slate-900">CBT Engine Terproteksi:</strong> Token ujian resmi, timer countdown, dan deteksi anti-kecurangan.
               </p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                <CheckCircle2 className="w-4 h-4" />
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
               </div>
-              <p className="text-xs sm:text-sm text-slate-700">
-                <strong className="font-semibold text-slate-900">Penilaian Otomatis & Analisis KKM:</strong> Skor
-                langsung terhitung, analisis butir soal, dan unduh rekap nilai per kelas.
+              <p className="text-xs text-slate-700 leading-snug">
+                <strong className="font-semibold text-slate-900">Rekapitulasi Nilai & KKM:</strong> Analisis butir soal otomatis, rekapitulasi nilai per kelas, dan transparansi evaluasi.
               </p>
             </div>
           </div>
 
-          {/* Quick Demo Login Preset Buttons */}
-          <div className="pt-4 border-t border-slate-200">
-            <div className="flex items-center gap-2 mb-2 text-xs font-bold text-slate-700">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>PILIHAN 1-KLIK LOGIN DEMO:</span>
+          {/* Quick Demo Login Preset Buttons - GURU & SISWA ONLY */}
+          <div className="pt-3.5 border-t border-slate-200">
+            <div className="flex items-center gap-1.5 mb-2 text-xs font-bold text-slate-700">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>1-KLIK LOGIN CEPAT DEMO:</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              {adminUser && (
+              {guruPai && (
                 <button
                   type="button"
-                  id="quick-demo-admin-btn"
-                  onClick={() => loginAsUser(adminUser)}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200 hover:border-rose-400 hover:bg-rose-50 text-left transition group shadow-2xs"
+                  id="quick-demo-guru-pai-btn"
+                  onClick={() => loginAsUser(guruPai)}
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-100 text-left transition group sm:col-span-2 shadow-2xs"
                 >
-                  <div>
-                    <span className="font-bold text-slate-900 block group-hover:text-rose-700">
-                      Login Admin CBT
-                    </span>
-                    <span className="text-[11px] text-slate-500">Pak Suryanto (NIP Admin)</span>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      GP
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-950 block group-hover:text-emerald-800">
+                        Login Guru PAI
+                      </span>
+                      <span className="text-[11px] text-emerald-700">
+                        {guruPai.name} (NIP: {guruPai.identifier})
+                      </span>
+                    </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-rose-600 transition" />
-                </button>
-              )}
-
-              {guruIpa && (
-                <button
-                  type="button"
-                  id="quick-demo-guru-btn"
-                  onClick={() => loginAsUser(guruIpa)}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 text-left transition group shadow-2xs"
-                >
-                  <div>
-                    <span className="font-bold text-slate-900 block group-hover:text-emerald-700">
-                      Login Guru (IPA)
-                    </span>
-                    <span className="text-[11px] text-slate-500">Ibu Sri Wahyuni, M.Pd.</span>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition" />
+                  <ArrowRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-1 transition" />
                 </button>
               )}
 
@@ -148,15 +237,15 @@ export const LoginView: React.FC = () => {
                   type="button"
                   id="quick-demo-siswa7-btn"
                   onClick={() => loginAsUser(siswaKls7)}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-left transition group shadow-2xs"
+                  className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-left transition group"
                 >
                   <div>
                     <span className="font-bold text-slate-900 block group-hover:text-blue-700">
                       Siswa Kelas 7 (7A)
                     </span>
-                    <span className="text-[11px] text-slate-500">Ahmad Rifai Pratama</span>
+                    <span className="text-[10px] text-slate-500">{siswaKls7.name}</span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition" />
                 </button>
               )}
 
@@ -165,15 +254,15 @@ export const LoginView: React.FC = () => {
                   type="button"
                   id="quick-demo-siswa8-btn"
                   onClick={() => loginAsUser(siswaKls8)}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-left transition group shadow-2xs"
+                  className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-left transition group"
                 >
                   <div>
                     <span className="font-bold text-slate-900 block group-hover:text-blue-700">
                       Siswa Kelas 8 (8B)
                     </span>
-                    <span className="text-[11px] text-slate-500">Siti Nurhaliza Azzahra</span>
+                    <span className="text-[10px] text-slate-500">{siswaKls8.name}</span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition" />
                 </button>
               )}
 
@@ -182,46 +271,47 @@ export const LoginView: React.FC = () => {
                   type="button"
                   id="quick-demo-siswa9-btn"
                   onClick={() => loginAsUser(siswaKls9)}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-left transition group shadow-2xs sm:col-span-2"
+                  className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-left transition group sm:col-span-2"
                 >
                   <div>
                     <span className="font-bold text-slate-900 block group-hover:text-blue-700">
-                      Siswa Kelas 9 (9A - Try Out & Ujian Akhir)
+                      Siswa Kelas 9 (9A - Persiapan Ujian Akhir)
                     </span>
-                    <span className="text-[11px] text-slate-500">Budi Santoso Putra (NISN: 0063456789)</span>
+                    <span className="text-[10px] text-slate-500">{siswaKls9.name} (NISN: {siswaKls9.identifier})</span>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition" />
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Interactive Login Form */}
+        {/* Right Column: Interactive Login Form (ONLY GURU & SISWA) */}
         <div className="lg:col-span-6">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-md p-6 sm:p-8">
-            {/* Role Switcher Tabs */}
-            <div className="mb-6">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-white/80 shadow-xl p-6 sm:p-7">
+            {/* Role Switcher Tabs - Strictly Siswa and Guru */}
+            <div className="mb-5">
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                Pilih Peran Masuk (3 Login)
+                Pilih Peran Masuk
               </label>
-              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl">
+              <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-xl">
                 <button
                   type="button"
                   id="role-tab-siswa"
                   onClick={() => {
                     setSelectedRole('siswa');
                     setIdentifier('siswa7');
+                    setPassword('123456');
                     setErrorMessage('');
                   }}
-                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-lg text-xs font-bold transition ${
+                  className={`flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold transition ${
                     selectedRole === 'siswa'
-                      ? 'bg-white text-blue-700 shadow-xs ring-1 ring-slate-200/50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                   }`}
                 >
-                  <GraduationCap className="w-4 h-4 mb-1 text-blue-600" />
-                  Siswa
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Siswa (Peserta Didik)</span>
                 </button>
 
                 <button
@@ -229,35 +319,18 @@ export const LoginView: React.FC = () => {
                   id="role-tab-guru"
                   onClick={() => {
                     setSelectedRole('guru');
-                    setIdentifier('guru_ipa');
+                    setIdentifier('guru_pai');
+                    setPassword('123456');
                     setErrorMessage('');
                   }}
-                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-lg text-xs font-bold transition ${
+                  className={`flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold transition ${
                     selectedRole === 'guru'
-                      ? 'bg-white text-emerald-700 shadow-xs ring-1 ring-slate-200/50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                   }`}
                 >
-                  <BookOpen className="w-4 h-4 mb-1 text-emerald-600" />
-                  Guru
-                </button>
-
-                <button
-                  type="button"
-                  id="role-tab-admin"
-                  onClick={() => {
-                    setSelectedRole('admin');
-                    setIdentifier('admin');
-                    setErrorMessage('');
-                  }}
-                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-lg text-xs font-bold transition ${
-                    selectedRole === 'admin'
-                      ? 'bg-white text-rose-700 shadow-xs ring-1 ring-slate-200/50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4 mb-1 text-rose-600" />
-                  Admin
+                  <BookOpen className="w-4 h-4" />
+                  <span>Guru (Pengampu PAI)</span>
                 </button>
               </div>
             </div>
@@ -276,9 +349,7 @@ export const LoginView: React.FC = () => {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   {selectedRole === 'siswa'
                     ? 'NISN Siswa / Username'
-                    : selectedRole === 'guru'
-                    ? 'NIP Guru / Username'
-                    : 'NIP Administrator / Username'}
+                    : 'NIP Guru / Username'}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -286,29 +357,23 @@ export const LoginView: React.FC = () => {
                   </div>
                   <input
                     type="text"
-                    id="login-identifier-input"
+                    id="input-identifier"
                     value={identifier}
                     onChange={e => setIdentifier(e.target.value)}
                     placeholder={
                       selectedRole === 'siswa'
                         ? 'Contoh: 0081234567 atau siswa7'
-                        : selectedRole === 'guru'
-                        ? 'Contoh: 198205142008012015 atau guru_ipa'
-                        : 'Contoh: admin'
+                        : 'Contoh: 198205142008011015 atau guru_pai'
                     }
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 transition"
+                    required
                   />
                 </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  {selectedRole === 'siswa'
-                    ? 'Gunakan 10 digit NISN Anda sesuai kartu ujian.'
-                    : 'Masukkan NIP 18 digit resmi sekolah.'}
-                </p>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Kata Sandi (Password)
+                  Kata Sandi
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -316,57 +381,66 @@ export const LoginView: React.FC = () => {
                   </div>
                   <input
                     type="password"
-                    id="login-password-input"
+                    id="input-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    placeholder="Masukkan kata sandi"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 transition"
                   />
                 </div>
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Untuk akun demo prototipe, password dapat diisi apa saja.
-                </p>
               </div>
+
+              {selectedRole === 'siswa' && (
+                <div className="p-2.5 rounded-xl bg-blue-50/80 border border-blue-100 text-blue-900 text-xs flex items-center justify-between">
+                  <span className="text-[11px] text-blue-700">Tingkat Kelas:</span>
+                  <div className="flex gap-1.5 font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setIdentifier('siswa7')}
+                      className={`px-2 py-0.5 rounded text-[11px] ${identifier === 'siswa7' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700 border border-blue-200'}`}
+                    >
+                      Kelas 7
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIdentifier('siswa8')}
+                      className={`px-2 py-0.5 rounded text-[11px] ${identifier === 'siswa8' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700 border border-blue-200'}`}
+                    >
+                      Kelas 8
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIdentifier('siswa9')}
+                      className={`px-2 py-0.5 rounded text-[11px] ${identifier === 'siswa9' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700 border border-blue-200'}`}
+                    >
+                      Kelas 9
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
-                id="login-submit-btn"
-                className={`w-full py-2.5 px-4 rounded-lg font-bold text-sm text-white transition flex items-center justify-center gap-2 shadow-xs ${
+                id="submit-login-btn"
+                className={`w-full py-3 px-4 rounded-xl text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 mt-2 ${
                   selectedRole === 'siswa'
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : selectedRole === 'guru'
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : 'bg-rose-600 hover:bg-rose-700'
+                    ? 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300'
+                    : 'bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:ring-emerald-300'
                 }`}
               >
                 <span>
-                  Masuk Sebagai{' '}
-                  {selectedRole === 'siswa' ? 'Siswa' : selectedRole === 'guru' ? 'Guru' : 'Admin'}
+                  Masuk Sebagai {selectedRole === 'siswa' ? 'Siswa' : 'Guru PAI'}
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
 
-            {/* Quick Demo Helper Hint */}
-            <div className="mt-5 p-3 rounded-lg bg-blue-50/70 border border-blue-100 text-slate-700 text-xs">
-              <span className="font-bold text-blue-900 block mb-1">💡 Tips Akses Demo:</span>
-              <ul className="space-y-0.5 text-[11px] text-slate-600 list-disc list-inside">
-                <li>
-                  <strong>Siswa Kelas 7:</strong> username <code>siswa7</code> / NISN <code>0081234567</code>
-                </li>
-                <li>
-                  <strong>Siswa Kelas 8:</strong> username <code>siswa8</code> / NISN <code>0072345678</code>
-                </li>
-                <li>
-                  <strong>Siswa Kelas 9:</strong> username <code>siswa9</code> / NISN <code>0063456789</code>
-                </li>
-                <li>
-                  <strong>Guru IPA:</strong> username <code>guru_ipa</code>
-                </li>
-                <li>
-                  <strong>Admin:</strong> username <code>admin</code>
-                </li>
-              </ul>
+            <div className="mt-5 pt-4 border-t border-slate-200 text-center">
+              <p className="text-[11px] text-slate-500">
+                Aplikasi Resmi <strong>Media PAI</strong> • {schoolConfig.name}
+                <br />
+                Tahun Ajaran {schoolConfig.academicYear} (Semester {schoolConfig.currentSemester})
+              </p>
             </div>
           </div>
         </div>
